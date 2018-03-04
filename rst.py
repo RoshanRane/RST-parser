@@ -278,6 +278,12 @@ class RSTTree:
         return self.text
 
     def get_subtexts(self):
+         """
+        Retrieve a list of texts from all children of this tree.
+
+        Returns:
+            A list of texts from children.
+        """
         assert self.text_constructed, "Texts are not constructed"
         subtexts = []
         if not self.is_leaf:
@@ -288,6 +294,13 @@ class RSTTree:
         return subtexts
     
     def all_trees(self):
+         """
+        Retrieve a list of subtrees of this tree, including itself but excluding
+        all the leafs.
+
+        Returns:
+            A list subtrees.
+        """
         subtrees = []
         if self.nuclei is not None:
             subtrees += [nucleus.all_trees() for nucleus in self.nuclei]
@@ -299,6 +312,12 @@ class RSTTree:
         return subtrees
 
     def all_edus(self):
+         """
+        Retrieve a list of all EDUs from leafs of this tree.
+
+        Returns:
+            A list of EDUs in the form of lists of tokens for each EDU.
+        """
         if self.text is not None:
             return [self.text]
         else:
