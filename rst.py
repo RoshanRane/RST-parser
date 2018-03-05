@@ -225,7 +225,7 @@ class RSTTree:
                 rep += (" " * indent) + "\n" + nucleus.output_lisp(indent + 2)
             if self.satellite is not None:
                 rep += (" " * indent) + "\n" + self.satellite.output_lisp(indent + 2)
-            rep += (" " * indent) + "\n)"
+            rep += "\n" + (" " * indent) + ")"
         return rep
     
     def calculate_spans(self):
@@ -396,5 +396,5 @@ def merge(tree_list, get_vector, idx2relation, connection_model, relation_model,
         last_tree = new_tree
 
 def create_tree(sentence_list, get_vector, idx2relation, connection_model, relation_model, nuclearity_model):
-    tree_list = [RSTTree.from_text(prepare_sentence(sentence), i, i) for i, sentence in enumerate(sentence_list)]
+    tree_list = [RSTTree.from_text(prepare_sentence(sentence), i + 1, i + 1) for i, sentence in enumerate(sentence_list)]
     return merge(tree_list, get_vector, idx2relation, connection_model, relation_model, nuclearity_model)
