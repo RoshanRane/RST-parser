@@ -278,7 +278,7 @@ class RSTTree:
         return self.text
 
     def get_subtexts(self):
-         """
+        """
         Retrieve a list of texts from all children of this tree.
 
         Returns:
@@ -294,7 +294,7 @@ class RSTTree:
         return subtexts
     
     def all_trees(self):
-         """
+        """
         Retrieve a list of subtrees of this tree, including itself but excluding
         all the leafs.
 
@@ -312,7 +312,7 @@ class RSTTree:
         return subtrees
 
     def all_edus(self):
-         """
+        """
         Retrieve a list of all EDUs from leafs of this tree.
 
         Returns:
@@ -345,7 +345,10 @@ def merge_once(tree_list, get_vector, idx2relation, connection_model, relation_m
             best_vector = vector
 
     if best_vector is None:
-        return tree_list, None
+        if len(tree_list) >= 2:
+            best_connection_index = 0
+        else:
+            return tree_list, None
 
     lhs = tree_list[best_connection_index]
     rhs = tree_list[best_connection_index + 1]
