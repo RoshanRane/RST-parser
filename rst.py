@@ -344,31 +344,39 @@ def merge_once(tree_list, get_vector, idx2relation, connection_model, relation_m
             best_connection_index = i
             best_vector = vector
 
+    skip_prediction = False
     if best_vector is None:
         if len(tree_list) >= 2:
             best_connection_index = 0
+            skip_prediction = True
         else:
             return tree_list, None
 
     lhs = tree_list[best_connection_index]
     rhs = tree_list[best_connection_index + 1]
 
-    relation = relation_model.predict_classes(np.expand_dims(best_vector, axis=0))[0]
-    relation = idx2relation[relation]
-
-    nuclearity = nuclearity_model.predict(np.expand_dims(best_vector, axis=0))[0]
-    nuclearity = np.round(nuclearity).astype(np.int)
-
     nuclei = []
     satellite = None
-    if nuclearity[0] == 0:
-        satellite = lhs
+
+    if not skip_prediction:
+
+        relation = relation_model.predict_classes(np.expand_dims(best_vector, axis=0))[0]
+        relation = idx2relation[relation]
+        nuclearity = nuclearity_model.predict(np.expand_dims(best_vector, axis=0))[0]
+        nuclearity = np.round(nuclearity).astype(np.int)
+
+        if nuclearity[0] == 0:
+            satellite = lhs
+        else:
+            nuclei.append(lhs)
+        if nuclearity[1] == 0:
+            satellite = rhs
+        else:
+            nuclei.append(rhs)
     else:
         nuclei.append(lhs)
-    if nuclearity[1] == 0:
         satellite = rhs
-    else:
-        nuclei.append(rhs)
+        relation = "none"
 
     new_tree = RSTTree.from_trees(relation, nuclei, satellite)
     new_tree.construct_text()
