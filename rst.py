@@ -121,8 +121,9 @@ class RSTTree:
                 new_tree.spans_calculated = True
             
             elif child_tag == 'rel2par' and parent is not None and child[1] != "span":
-                parent.relation = child[1]
-            
+                if parent.relation is None or parent.relation == "span":
+                    parent.relation = child[1]
+
             elif child_tag == 'nucleus':
                 new_tree.nuclei.append(RSTTree.from_list(child, filename, parent=new_tree, index=nucleus_index))
                 nucleus_index += 1
