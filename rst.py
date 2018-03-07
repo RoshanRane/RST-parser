@@ -121,8 +121,9 @@ class RSTTree:
                 new_tree.spans_calculated = True
             
             elif child_tag == 'rel2par' and parent is not None and child[1] != "span":
-                parent.relation = child[1]
-            
+                if parent.relation is None or parent.relation == "span":
+                    parent.relation = child[1]
+
             elif child_tag == 'nucleus':
                 new_tree.nuclei.append(RSTTree.from_list(child, filename, parent=new_tree, index=nucleus_index))
                 nucleus_index += 1
@@ -225,7 +226,7 @@ class RSTTree:
                 rep += (" " * indent) + "\n" + nucleus.output_lisp(indent + 2)
             if self.satellite is not None:
                 rep += (" " * indent) + "\n" + self.satellite.output_lisp(indent + 2)
-            rep += (" " * indent) + "\n)"
+            rep += "\n" + (" " * indent) + ")"
         return rep
     
     def calculate_spans(self):
@@ -278,7 +279,7 @@ class RSTTree:
         return self.text
 
     def get_subtexts(self):
-         """
+        """
         Retrieve a list of texts from all children of this tree.
 
         Returns:
@@ -294,7 +295,7 @@ class RSTTree:
         return subtexts
     
     def all_trees(self):
-         """
+        """
         Retrieve a list of subtrees of this tree, including itself but excluding
         all the leafs.
 
@@ -312,7 +313,7 @@ class RSTTree:
         return subtrees
 
     def all_edus(self):
-         """
+        """
         Retrieve a list of all EDUs from leafs of this tree.
 
         Returns:
@@ -344,28 +345,39 @@ def merge_once(tree_list, get_vector, idx2relation, connection_model, relation_m
             best_connection_index = i
             best_vector = vector
 
+    skip_prediction = False
     if best_vector is None:
-        return tree_list, None
+        if len(tree_list) >= 2:
+            best_connection_index = 0
+            skip_prediction = True
+        else:
+            return tree_list, None
 
     lhs = tree_list[best_connection_index]
     rhs = tree_list[best_connection_index + 1]
 
-    relation = relation_model.predict_classes(np.expand_dims(best_vector, axis=0))[0]
-    relation = idx2relation[relation]
-
-    nuclearity = nuclearity_model.predict(np.expand_dims(best_vector, axis=0))[0]
-    nuclearity = np.round(nuclearity).astype(np.int)
-
     nuclei = []
     satellite = None
-    if nuclearity[0] == 0:
-        satellite = lhs
+
+    if not skip_prediction:
+
+        relation = relation_model.predict_classes(np.expand_dims(best_vector, axis=0))[0]
+        relation = idx2relation[relation]
+        nuclearity = nuclearity_model.predict(np.expand_dims(best_vector, axis=0))[0]
+        nuclearity = np.round(nuclearity).astype(np.int)
+
+        if nuclearity[0] == 0:
+            satellite = lhs
+        else:
+            nuclei.append(lhs)
+        if nuclearity[1] == 0:
+            satellite = rhs
+        else:
+            nuclei.append(rhs)
     else:
         nuclei.append(lhs)
-    if nuclearity[1] == 0:
         satellite = rhs
-    else:
-        nuclei.append(rhs)
+        relation = "none"
 
     new_tree = RSTTree.from_trees(relation, nuclei, satellite)
     new_tree.construct_text()
@@ -385,5 +397,5 @@ def merge(tree_list, get_vector, idx2relation, connection_model, relation_model,
         last_tree = new_tree
 
 def create_tree(sentence_list, get_vector, idx2relation, connection_model, relation_model, nuclearity_model):
-    tree_list = [RSTTree.from_text(prepare_sentence(sentence), i, i) for i, sentence in enumerate(sentence_list)]
+    tree_list = [RSTTree.from_text(prepare_sentence(sentence), i + 1, i + 1) for i, sentence in enumerate(sentence_list)]
     return merge(tree_list, get_vector, idx2relation, connection_model, relation_model, nuclearity_model)
